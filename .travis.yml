@@ -1,0 +1,39 @@
+# Define environment
+dist: xenial # Ubuntu 18.04
+language: bash
+
+# Only build pushes to master branch
+branches:
+  only:
+    - master
+
+# Export variables
+env:
+  - tf_version=0.12.19 tf_init_cli_options="-input=false" tf_validation_cli_options="" tf_plan_cli_options="-lock=false -input=false" tf_apply_cli_options="-auto-approve -input=false"
+
+# Install dependencies
+before_install:
+  - wget https://releases.hashicorp.com/terraform/"$tf_version"/terraform_"$tf_version"_linux_amd64.zip
+  - unzip terraform_"$tf_version"_linux_amd64.zip
+  - sudo mv terraform /usr/local/bin/
+  - rm terraform_"$tf_version"_linux_amd64.zip
+
+# Terraform Apply
+jobs:
+  include:
+    - stage: terraform apply
+      # terraform apply 
+      if: branch = master
+      script:
+        - cd aws-s3
+        - echo "executing changes in aws-s3"
+        - terraform init $tf_init_cli_options
+        - terraform apply $tf_apply_cli_options
+        - cd ../eks/
+        - echo "executing changes in eks folder"
+        - terraform init $tf_init_cli_options
+        - terraform apply $tf_apply_cli_options
+        - cd ../kubernetes
+        - echo "executing changes in kubernetes folder"
+        - terraform init $tf_init_cli_options
+        - terraform apply $tf_apply_cli_options
